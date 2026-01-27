@@ -1,0 +1,208 @@
+import config from "../../lib/config";
+import AuthService from "./services";
+import { Request, Response } from "express";
+import { TLoginSchema } from "./schema";
+import { compare, decodeJwtToken, generateJwtToken, generateOtp, generateUserToken } from "../../lib/jwt";
+import fs from "fs";
+import Handlebars from "handlebars";
+import { CustomError } from "../../lib/utils";
+import { StatusCodes } from "http-status-codes";
+import bcrypt from "bcrypt";
+import { email } from "zod";
+import { permission } from "process";
+import RoleService from "../roles/services";
+import { sendMail } from "../../lib/mailer";
+
+class AuthController {
+  private authService: AuthService = new AuthService();
+  private roleService: RoleService = new RoleService();
+  constructor() {}
+
+  login = async (req: Request, res: Response) => {
+    try {
+      const body = req.body as TLoginSchema;
+
+      if (body.type === "request-otp") {
+        const { email } = body;
+        const user = await this.authService.findByEmail(email);
+
+        if (!user || !user.id) {
+          throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
+        }
+
+        const otp = generateOtp();
+
+        const jwtToken = await generateJwtToken({
+          userId: user.id,
+          email: user?.email!,
+          otp: otp,
+          jwtSecret: config.JWT_SECRET,
+        });
+
+        await this.authService.updateCredentials(user.credential.email, {
+          access_token: jwtToken,
+        });
+
+        const sourcePath = `${__dirname}/../../../public/email-templates/request-otp.html`;
+        const sourceTemplate = fs.readFileSync(sourcePath, "utf-8").toString();
+        const template = Handlebars.compile(sourceTemplate);
+        const replacement = {
+          firstName: user?.first_name,
+          otp,
+        };
+        const requestOtpContent = template(replacement);
+        sendMail({
+          content: requestOtpContent,
+          subject: "One Time Password",
+          emailTo: user?.email as string,
+        });
+
+        return res.status(200).json({
+          success: true,
+        });
+      }
+
+      if (body.type === "verify-otp") {
+        const { email, otp, type } = body;
+        const user = await this.authService.findByEmail(email);
+        if (!user || !user.id) {
+          throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
+        }
+        const jwt = decodeJwtToken(user.credential.access_token, config.JWT_SECRET);
+        if (!jwt) {
+          throw new CustomError(StatusCodes.BAD_REQUEST, "Your OTP has been expired. Please request a new one.");
+        }
+        if (user.email !== jwt.email) {
+          throw new CustomError(StatusCodes.BAD_REQUEST, "Invalid Credentials");
+        }
+        const isOtpMatched = await bcrypt.compare(otp, jwt.otp);
+        if (!isOtpMatched) {
+          throw new CustomError(StatusCodes.BAD_REQUEST, "Invalid OTP. Please try again");
+        }
+        const payload = {
+          userId: user.id,
+          email: user.email,
+        };
+        const [accessToken, refreshToken] = await Promise.all([
+          generateUserToken({
+            ...payload,
+            expiresIn: "1d",
+            jwtSecret: config.JWT_SECRET,
+          }),
+          generateUserToken({
+            ...payload,
+            expiresIn: "7d",
+            jwtSecret: config.JWT_REFRESH_SECRET,
+          }),
+        ]);
+        await this.authService.updateCredentials(user.credential.email, {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        const permission = await this.roleService.getUserAccess(user.email);
+        const permissionCodes = permission.map((p) => p.code);
+
+        return res.status(StatusCodes.OK).json({
+          auth: {
+            id: user.id,
+            name: `${user.first_name} ${user.last_name}`,
+            role: user.role?.name,
+            email: user.email,
+            permissions: permissionCodes,
+          },
+          tokens: {
+            accessToken,
+            refreshToken,
+          },
+          success: true,
+        });
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  register = async (req: Request, res: Response) => {
+    try {
+      // const response = await this.authService.register(req.body);
+      return res.status(201).json({});
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ message: "something went wrong..." });
+    }
+  };
+
+  getMe = async (req: Request, res: Response) => {
+    try {
+      const userAuth = req.user;
+
+      const user = await this.authService.findByEmail(userAuth?.email!);
+
+      if (!user || !user.id) {
+        throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
+      }
+      return res.status(StatusCodes.OK).json(user);
+    } catch (error) {
+      throw error;
+    }
+  };
+  refresh = async (req: Request, res: Response) => {
+    try {
+      const userAuth = req.user;
+
+      const user = await this.authService.findByEmail(userAuth?.email!);
+
+      if (!user || !user.id) {
+        throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
+      }
+
+      const payload = {
+        userId: user.id,
+        email: user.email,
+        studentId: user.student_id,
+      };
+
+      const [accessToken, refreshToken] = await Promise.all([
+        generateUserToken({
+          ...payload,
+          expiresIn: "1d",
+          jwtSecret: config.JWT_SECRET,
+        }),
+        generateUserToken({
+          ...payload,
+          expiresIn: "7d",
+          jwtSecret: config.JWT_REFRESH_SECRET,
+        }),
+      ]);
+
+      await this.authService.updateCredentials(user.credential.email, {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      const permission = await this.roleService.getUserAccess(user.email);
+      const permissionCodes = permission.map((p) => p.code);
+
+      return res.status(StatusCodes.OK).json({
+        auth: {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          role: user.role?.name,
+          email: user.email,
+          permissions: permissionCodes,
+        },
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
+        success: true,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ message: "something went wrong..." });
+    }
+  };
+}
+
+export default AuthController;

@@ -1,0 +1,268 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String  @id @default(cuid())
+  email       String  @unique
+  first_name  String?
+  middle_name String?
+  last_name   String?
+  student_id  String? @unique
+  role        Role?   @relation(fields: [role_id], references: [id])
+  role_id     String?
+
+  credential    Credential @relation(fields: [credential_id], references: [id])
+  credential_id String     @unique
+
+  office    Office? @relation(fields: [office_id], references: [id])
+  office_id String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Complaint   Complaint[]
+  News        News[]
+  Experiences Experience[]
+  education   Education[]
+
+  @@index([email, student_id])
+  @@map("user")
+}
+
+model Credential {
+  id         String  @id @default(cuid())
+  student_id String? @unique
+  email      String  @unique
+  // password   String?
+  user       User?
+
+  access_token  String   @db.Text
+  refresh_token String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([student_id, email])
+  @@map("credential")
+}
+
+model Role {
+  id   String  @id @default(cuid())
+  name String  @unique
+  desc String?
+
+  access Access[]
+  user   User[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([name])
+  @@map("role")
+}
+
+model Access {
+  id   String  @id @default(cuid())
+  code String  @unique
+  name String
+  desc String?
+
+  roles Role[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([code])
+  @@map("access")
+}
+
+enum ComplaintType {
+  HARASSMENT
+  SUICIDE_OR_SELF_INJURY
+  VIOLENCE_OR_DANGEROUS_ORGANIZATIONS
+  NUDITY_OR_SEXUAL_ACTIVITY
+  SELLING_OR_PROMOTING_OF_RESTRICTED_ITEMS
+  SCAM_OR_FRAUD
+  OTHER
+}
+
+model Complaint {
+  id String @id @default(cuid())
+
+  name                     String
+  contact_number           String
+  alternate_contact_number String?
+  email                    String
+
+  incident_detail  String
+  date_of_incident DateTime
+
+  complaint_type ComplaintType @default(OTHER)
+
+  complainant    User?   @relation(fields: [complainant_id], references: [id])
+  complainant_id String?
+
+  ticket    Ticket?
+  documents Documents[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([name, complaint_type])
+  @@map("complaint")
+}
+
+enum TicketStatusEnum {
+  PENDING
+  UNDER_REVIEW
+  BEING_STUDIED
+  BEING_PROCESS
+  RESOLVED
+  REJECTED
+}
+
+model Ticket {
+  id String @id @default(cuid())
+
+  title       String
+  description String
+
+  status TicketStatusEnum @default(PENDING)
+
+  complaint    Complaint? @relation(fields: [complaint_id], references: [id])
+  complaint_id String?    @unique
+
+  assigned_office    Office? @relation(fields: [assigned_office_id], references: [id])
+  assigned_office_id String?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([status])
+  @@map("ticket")
+}
+
+enum OfficeType {
+  GUIDANCE
+  HEALTH_SERVICES
+  SECURITY
+  DISCIPLINE
+  STUDENT_AFFAIRS
+  FINANCE
+  ADMINISTRATIVE
+}
+
+model Office {
+  id   String  @id @default(cuid())
+  name String  @unique
+  desc String?
+
+  type OfficeType
+
+  ticket Ticket[]
+  users  User[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([name])
+  @@map("office")
+}
+
+model Documents {
+  id String @id @default(cuid())
+
+  public_url String @db.Text
+  public_id  String @db.Text
+
+  complaint    Complaint? @relation(fields: [complaint_id], references: [id])
+  complaint_id String?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([complaint_id])
+  @@map("documents")
+}
+
+enum NewsCategory {
+  EDUCATION
+  ANNOUNCEMENT
+  JOBS
+  CAMPUS_NOTICE
+  HEALTH_AND_WELLNESS
+  ADMISSIONS
+}
+
+model News {
+  id String @id @default(cuid())
+
+  title  String
+  source String
+
+  content String @db.Text
+
+  category NewsCategory
+
+  posted_by    User?   @relation(fields: [posted_by_id], references: [id])
+  posted_by_id String? @unique
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+}
+
+model Experience {
+  id          String  @id @default(cuid())
+  title       String
+  company     String
+  description String? @db.Text
+
+  start_year Int // e.g. 2022
+  end_year   Int? // null = Present
+  is_current Boolean? @default(false)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  @@map("experience")
+}
+
+model Education {
+  id String @id @default(uuid())
+
+  degree      String
+  institution String
+  description String? @db.Text
+  year        Int
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("education")
+}

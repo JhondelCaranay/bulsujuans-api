@@ -1,0 +1,38 @@
+# Node modules (we install inside container)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# TypeScript build output (we rebuild inside container)
+dist
+
+# Logs
+logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Editor / IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Coverage / test output
+coverage
+*.test.ts
+*.spec.ts
+
+# Docker files themselves (optional if in same folder)
+Dockerfile.dev
