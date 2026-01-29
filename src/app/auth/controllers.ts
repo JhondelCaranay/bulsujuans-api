@@ -2,14 +2,12 @@ import config from "../../lib/config";
 import AuthService from "./services";
 import { Request, Response } from "express";
 import { TLoginSchema } from "./schema";
-import { compare, decodeJwtToken, generateJwtToken, generateOtp, generateUserToken } from "../../lib/jwt";
+import { decodeJwtToken, generateJwtToken, generateOtp, generateUserToken } from "../../lib/jwt";
 import fs from "fs";
 import Handlebars from "handlebars";
 import { CustomError } from "../../lib/utils";
 import { StatusCodes } from "http-status-codes";
 import bcrypt from "bcrypt";
-import { email } from "zod";
-import { permission } from "process";
 import RoleService from "../roles/services";
 import { sendMail } from "../../lib/mailer";
 
@@ -31,6 +29,7 @@ class AuthController {
         }
 
         const otp = generateOtp();
+        console.log("🚀 request otp: ", otp);
 
         const jwtToken = await generateJwtToken({
           userId: user.id,

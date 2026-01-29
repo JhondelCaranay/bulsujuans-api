@@ -1,4 +1,4 @@
-# Node modules (we install inside container)
+# Node modules (installed inside container)
 node_modules
 npm-debug.log
 yarn-error.log
@@ -8,14 +8,14 @@ yarn-error.log
 .env.local
 .env.*.local
 
-# TypeScript build output (we rebuild inside container)
+# TypeScript build output
 dist
 
 # Logs
 logs
 *.log
 
-# OS generated files
+# OS files
 .DS_Store
 Thumbs.db
 
@@ -29,10 +29,14 @@ Thumbs.db
 *.swp
 *.swo
 
-# Coverage / test output
+# Coverage / tests
 coverage
 *.test.ts
 *.spec.ts
 
-# Docker files themselves (optional if in same folder)
+# Optional Docker build files (depends on your CI setup)
 Dockerfile.dev
+.dockerignore
+
+# Optional documentation
+README.md
