@@ -48,7 +48,7 @@ jobs:
         shell: bash
 
       - name: Start app with Docker Compose
-        run: docker compose up -d
+        run: docker-compose up -d
 
       # - name: Run Prisma Migrate
       #   run: |
