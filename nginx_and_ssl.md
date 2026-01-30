@@ -38,8 +38,8 @@ set -e
 # ======================
 PROJECT_NAME="bulsujuans-mern-app"
 DOMAIN="bulsujuans.jhondel-mern-app.com"
-FRONTEND_PORT=3000
-BACKEND_PORT=4000
+FRONTEND_PORT=3001
+BACKEND_PORT=4001
 
 
 echo "=== 1. Install Nginx ==="

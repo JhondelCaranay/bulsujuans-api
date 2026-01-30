@@ -6,6 +6,6 @@ services:
     container_name: bulsujuans-backend-app-container
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "4001:4000"
     env_file:
       - .env
