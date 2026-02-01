@@ -14,7 +14,7 @@ This script performs the following steps:
 4. Test & reload Nginx
 5. Install Certbot
 6. Configure UFW (firewall)
-7. Request SSL for `bulsujuans.jhondel-mern-app.com`
+7. Request SSL for `bulsujuans.xyz`
 
 ---
 
@@ -37,41 +37,55 @@ set -e
 # VARIABLES
 # ======================
 PROJECT_NAME="bulsujuans-mern-app"
-DOMAIN="bulsujuans.jhondel-mern-app.com"
+DOMAIN="bulsujuans.xyz"
 FRONTEND_PORT=3001
 BACKEND_PORT=4001
+EMAIL="jhondeldelconacaranay@gmail.com"
 
-
-echo "=== 1. Install Nginx ==="
+# ======================
+# 1️⃣ Install Nginx
+# ======================
+echo "=== Installing Nginx ==="
 sudo apt update -y
 sudo apt install nginx -y
 sudo systemctl start nginx
 sudo systemctl enable nginx
 
-# ============================================
-# NOTE: Trailing Slash in proxy_pass Matters
-# ============================================
-# 1️⃣ Without trailing slash:
-#    proxy_pass http://localhost:$BACKEND_PORT;
-#    - Preserves the matched location path (/api/) when forwarding.
-#    - /api/users -> http://localhost:4000/api/users
-#    - Correct for our backend because we mount routes under /api in Express.
-#
-# 2️⃣ With trailing slash:
-#    proxy_pass http://localhost:$BACKEND_PORT/;
-#    - Strips the matched location path (/api/) from the request.
-#    - /api/users -> http://localhost:4000/users
-#    - Would break our backend routes, since /api prefix is removed.
-#
-#    For this project, always use proxy_pass WITHOUT trailing slash
-#    to ensure frontend /api calls correctly reach backend /api endpoints.
+# ======================
+# 2️⃣ Configure UFW (Firewall)
+# ======================
+echo "=== Configuring UFW ==="
+sudo ufw allow ssh
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw --force enable
 
-echo "=== 2. Create Nginx config ==="
+# ======================
+# 3️⃣ Create Nginx Config
+# ======================
+echo "=== Creating Nginx config ==="
 sudo tee /etc/nginx/sites-available/$PROJECT_NAME > /dev/null <<EOF
+# Redirect all HTTP traffic to HTTPS
 server {
     listen 80;
     server_name $DOMAIN;
 
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+
+# HTTPS server block
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Backend API proxy
     location /api/ {
         proxy_pass http://localhost:$BACKEND_PORT;
         proxy_http_version 1.1;
@@ -81,6 +95,17 @@ server {
         proxy_cache_bypass \$http_upgrade;
     }
 
+    # Socket.IO
+    location /socket.io/ {
+        proxy_pass http://localhost:$BACKEND_PORT/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+
+    # Frontend proxy
     location / {
         proxy_pass http://localhost:$FRONTEND_PORT/;
         proxy_http_version 1.1;
@@ -92,29 +117,42 @@ server {
 }
 EOF
 
-echo "=== 3. Enable Nginx site ==="
+# ======================
+# 4️⃣ Enable site & remove default
+# ======================
+echo "=== Enabling Nginx site ==="
 sudo ln -sf /etc/nginx/sites-available/$PROJECT_NAME /etc/nginx/sites-enabled/$PROJECT_NAME
 sudo rm -f /etc/nginx/sites-enabled/default
 
-echo "=== 4. Test & reload Nginx ==="
+# ======================
+# 5️⃣ Test & reload Nginx
+# ======================
+echo "=== Testing Nginx config ==="
 sudo nginx -t
 sudo systemctl reload nginx
 
-echo "=== 5. Install Certbot ==="
+# ======================
+# 6️⃣ Install Certbot
+# ======================
+echo "=== Installing Certbot ==="
 sudo apt install certbot python3-certbot-nginx -y
 
-echo "=== 6. Configure UFW ==="
-sudo ufw allow ssh
-sudo ufw allow http
-sudo ufw allow https
-sudo ufw --force enable
+# ======================
+# 7️⃣ Request SSL Certificate
+# ======================
+echo "=== Requesting Let’s Encrypt SSL ==="
+sudo certbot --nginx -d $DOMAIN --redirect --agree-tos --non-interactive -m $EMAIL
 
-echo "=== 7. Request SSL certificate ==="
-sudo certbot --nginx -d $DOMAIN
+# ======================
+# 8️⃣ Test renewal
+# ======================
+echo "=== Testing SSL renewal ==="
+sudo certbot renew --dry-run
 
 echo "=== DONE ==="
 echo "Your MERN app should now be available at:"
 echo "https://$DOMAIN"
+
 ```
 
 Save and exit:
