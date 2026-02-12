@@ -16,7 +16,7 @@ export const storeComplaintSchema = z.object({
     .max(500, "Incident Detail must be at most 500 characters"),
   date_of_incident: z.coerce.date("Date of Incident is required"),
   complaint_type: z.enum(ComplaintType, `Complaint Type must be one of: ${Object.values(ComplaintType).join(", ")}`),
-
+  is_anonymous: z.coerce.boolean("Is Anonymous is required").optional(),
   complainant_id: z
     .string("Complainant ID is required")
     .min(1, "Complainant ID must be at least 1 character")

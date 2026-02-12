@@ -9,7 +9,7 @@ cloudinary.config({
 export const uploadToCloudinary = (
   fileBuffer: Buffer,
   folder = "uploads",
-  resourceType: "image" | "auto" | "raw" = "auto"
+  resourceType: "image" | "auto" | "raw" = "auto",
 ): Promise<{ url: string; public_id: string }> => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -23,16 +23,16 @@ export const uploadToCloudinary = (
           url: result.secure_url,
           public_id: result.public_id,
         });
-      }
+      },
     );
 
     stream.end(fileBuffer);
   });
 };
 
-export const deleteFromCloudinary = async (publicId: string): Promise<void> => {
+export const deleteFromCloudinary = async (publicId: string, resourceType: "image" | "raw"): Promise<void> => {
   try {
-    await cloudinary.uploader.destroy(publicId, { resource_type: "auto" });
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
   } catch (error) {
     console.error("Cloudinary deletion error:", error);
     throw new Error("Failed to delete file from Cloudinary");
