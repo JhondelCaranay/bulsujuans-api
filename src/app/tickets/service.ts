@@ -26,7 +26,7 @@ class TicketService {
     offset: number,
     complaint_status?: TicketStatusEnum,
     assigned_office_id?: string,
-    complaint_id?: string
+    complaint_id?: string,
   ) {
     return await prisma.ticket.findMany({
       where: {
@@ -48,7 +48,7 @@ class TicketService {
     search: string,
     complaint_status?: TicketStatusEnum,
     assigned_office_id?: string,
-    complaint_id?: string
+    complaint_id?: string,
   ) {
     return await prisma.ticket.count({
       where: {
@@ -66,6 +66,17 @@ class TicketService {
       where: {
         id: {
           equals: id,
+        },
+        deleted_at: null,
+      },
+    });
+  }
+
+  public async getTicketByComplaintId(complaint_id: string) {
+    return await prisma.ticket.findFirst({
+      where: {
+        complaint_id: {
+          equals: complaint_id,
         },
         deleted_at: null,
       },

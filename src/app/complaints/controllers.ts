@@ -3,7 +3,7 @@ import ComplaintService from "./services";
 import { CustomError } from "../../lib/utils";
 import { StatusCodes } from "http-status-codes";
 import { TStoreComplaintSchema, TUpdateComplaintSchema } from "./schema";
-import { uploadToCloudinary } from "../../lib/config/cloudinary";
+import { deleteFromCloudinary, uploadToCloudinary } from "../../lib/config/cloudinary";
 import DocumentService from "../documents/service";
 import TicketService from "../tickets/service";
 
@@ -88,7 +88,6 @@ class ComplaintController {
         message: "Complaint Created Successfully",
       });
     } catch (error) {
-      console.log("🚀 ~ ComplaintController ~ error:", error);
       throw new CustomError(StatusCodes.INTERNAL_SERVER_ERROR, "Server Error. Failed to create complaint");
     }
   };
@@ -96,6 +95,8 @@ class ComplaintController {
   update = async (req: Request, res: Response) => {
     const { id }: { id?: string } = req.params;
     const body = req.body as TUpdateComplaintSchema;
+    const files = req.files as Express.Multer.File[];
+
     try {
       const complaint = await this.complaintService.getComplaintById(id);
 
@@ -104,6 +105,28 @@ class ComplaintController {
       }
 
       const data = await this.complaintService.updateComplaint(id, body);
+
+      if (files && files.length > 0) {
+        const oldDocuments = await this.documentService.getDocumentsByComplaintId(id);
+        if (oldDocuments && oldDocuments.length > 0) {
+          await Promise.all(
+            oldDocuments.map(async (doc) => {
+              await deleteFromCloudinary(doc.public_id, "raw");
+            }),
+          );
+          await this.documentService.deleteDocumentsByComplaintId(id);
+        }
+
+        const uploadedFiles = await Promise.all(files.map((file) => uploadToCloudinary(file.buffer, "complaints")));
+
+        const documents = uploadedFiles.map((file) => ({
+          public_url: file.url,
+          public_id: file.public_id,
+          complaint_id: data.id,
+        }));
+
+        await this.documentService.uploadDocument(documents);
+      }
 
       return res.status(StatusCodes.OK).json({
         data,
@@ -126,6 +149,13 @@ class ComplaintController {
       }
 
       const data = await this.complaintService.deleteComplaint(id);
+
+      if (data) {
+        const ticket = await this.ticketService.getTicketByComplaintId(id);
+        if (ticket) {
+          await this.ticketService.deleteTicket(ticket.id);
+        }
+      }
 
       return res.status(StatusCodes.OK).json({
         data,

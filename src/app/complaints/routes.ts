@@ -16,13 +16,14 @@ router.post(
   hasAllPermission(["complaint:create"]),
   upload.array("documents"),
   validate(storeComplaintSchema),
-  complaintController.store
+  complaintController.store,
 );
 router.patch(
   "/update/:id",
   hasAllPermission(["complaint:edit"]),
+  upload.array("documents"),
   validate(updateComplaintSchema),
-  complaintController.update
+  complaintController.update,
 );
 router.delete("/destroy/:id", hasAllPermission(["complaint:delete"]), complaintController.destroy);
 

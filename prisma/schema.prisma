@@ -114,6 +114,7 @@ model Complaint {
 
   complainant    User?   @relation(fields: [complainant_id], references: [id])
   complainant_id String?
+  is_anonymous   Boolean @default(false)
 
   ticket    Ticket?
   documents Documents[]

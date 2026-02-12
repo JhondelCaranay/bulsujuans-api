@@ -48,13 +48,13 @@ class TicketController {
         offset,
         complaint_status,
         assigned_office_id,
-        complaint_id
+        complaint_id,
       );
       const total = await this.ticketService.getTicketsTotal(
         search,
         complaint_status,
         assigned_office_id,
-        complaint_id
+        complaint_id,
       );
 
       return res.status(StatusCodes.OK).json({
