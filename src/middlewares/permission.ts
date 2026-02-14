@@ -29,6 +29,7 @@ export const hasPermission = (permission: string) => {
 
 export const hasAllPermission = (permissions: string[]) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    console.log("🚀 ~ hasAllPermission ~ req.user:", req.user);
     if (!req.user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }

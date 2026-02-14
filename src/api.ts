@@ -14,7 +14,7 @@ import { authenticate } from "./middlewares/authenticate";
 import errorHandler from "./middlewares/error-handler";
 
 const apiRouter = Router();
-apiRouter.use("/users", userRoutes);
+apiRouter.use("/users", authenticate, userRoutes);
 apiRouter.use("/roles", authenticate, roleRoutes);
 apiRouter.use("/access", authenticate, accessRoutes);
 apiRouter.use("/complaints", authenticate, complaintRoutes);
