@@ -36,6 +36,25 @@ class UserController {
     }
   };
 
+  show = async (req: Request, res: Response) => {
+    try {
+      const { id }: { id?: string } = req.params;
+      const data = await this.userService.getUserById(id);
+
+      if (!data) {
+        throw new CustomError(StatusCodes.BAD_REQUEST, "User id doesn't exist");
+      }
+
+      return res.status(StatusCodes.OK).json({
+        data,
+        success: true,
+        message: "Get User Detail",
+      });
+    } catch (error) {
+      throw new CustomError(StatusCodes.INTERNAL_SERVER_ERROR, "Server Error. Failed to fetch user");
+    }
+  };
+
   // create = async (req: Request, res: Response) => {
   //   try {
   //     const response = await this.userService.create("hello world");

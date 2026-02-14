@@ -11,7 +11,6 @@ class UserService {
           { first_name: { contains: search } },
           { last_name: { contains: search } },
         ],
-        deleted_at: null,
       },
       include: {
         role: true,
@@ -30,7 +29,19 @@ class UserService {
           { first_name: { contains: search } },
           { last_name: { contains: search } },
         ],
-        deleted_at: null,
+      },
+    });
+  }
+
+  public async getUserById(id: string) {
+    return await prisma.user.findFirst({
+      where: {
+        id: {
+          equals: id,
+        },
+      },
+      include: {
+        role: true,
       },
     });
   }
