@@ -9,6 +9,21 @@ class RoleController {
   private roleService: RoleService = new RoleService();
   constructor() {}
 
+  options = async (req: Request, res: Response) => {
+    try {
+      const data = await this.roleService.getRoleOptions();
+
+      const formattedData = data.map((i) => ({
+        label: i.name,
+        value: i.id,
+      }));
+
+      return res.status(StatusCodes.OK).json(formattedData);
+    } catch (error) {
+      throw new CustomError(StatusCodes.INTERNAL_SERVER_ERROR, "Server Error. Failed to fetch roles");
+    }
+  };
+
   list = async (req: Request, res: Response) => {
     try {
       const page = parseInt(req.query.page as string) || 1;

@@ -23,14 +23,16 @@ model User {
   role        Role?   @relation(fields: [role_id], references: [id])
   role_id     String?
 
-  credential    Credential @relation(fields: [credential_id], references: [id])
-  credential_id String     @unique
+  credential    Credential? @relation(fields: [credential_id], references: [id])
+  credential_id String?     @unique
 
   office    Office? @relation(fields: [office_id], references: [id])
   office_id String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status Boolean? @default(true)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   deleted_at DateTime?
 
   Complaint   Complaint[]
@@ -46,7 +48,6 @@ model Credential {
   id         String  @id @default(cuid())
   student_id String? @unique
   email      String  @unique
-  // password   String?
   user       User?
 
   access_token  String   @db.Text

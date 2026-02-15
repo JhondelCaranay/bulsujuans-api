@@ -8,6 +8,7 @@ const router: Router = Router();
 
 const roleController = new RoleController();
 
+router.get("/options", hasAllPermission(["roles:view_list"]), roleController.options);
 router.get("/list", hasAllPermission(["roles:view_list"]), roleController.list);
 router.get("/show/:id", hasAllPermission(["roles:view_detail"]), roleController.show);
 router.post("/store", hasAllPermission(["roles:create"]), validate(storeRoleSchema), roleController.store);

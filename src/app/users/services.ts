@@ -1,4 +1,6 @@
 import prisma from "../../lib/prisma";
+import { TUpdateUserSchema } from "../users/schema";
+import { TStoreUserSchema } from "./schema";
 
 class UserService {
   constructor() {}
@@ -11,6 +13,7 @@ class UserService {
           { first_name: { contains: search } },
           { last_name: { contains: search } },
         ],
+        deleted_at: null,
       },
       include: {
         role: true,
@@ -29,6 +32,7 @@ class UserService {
           { first_name: { contains: search } },
           { last_name: { contains: search } },
         ],
+        deleted_at: null,
       },
     });
   }
@@ -46,8 +50,47 @@ class UserService {
     });
   }
 
-  public async create(body: any) {
-    return body;
+  public async getUserByEmail(email: string) {
+    return await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+        },
+        deleted_at: null,
+      },
+    });
+  }
+
+  public async createUser(body: TStoreUserSchema) {
+    return await prisma.user.create({
+      data: body,
+    });
+  }
+
+  public async createCredential(body: any) {
+    return await prisma.credential.create({
+      data: body,
+    });
+  }
+
+  public async updateUser(id: string, data: TUpdateUserSchema) {
+    return await prisma.user.update({
+      where: {
+        id: id,
+      },
+      data: data,
+    });
+  }
+
+  public async deleteUser(id: string) {
+    return await prisma.user.update({
+      where: {
+        id: id,
+      },
+      data: {
+        deleted_at: new Date(),
+      },
+    });
   }
 }
 
