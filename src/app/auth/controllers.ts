@@ -24,7 +24,7 @@ class AuthController {
         const { email } = body;
         const user = await this.authService.findByEmail(email);
 
-        if (!user || !user.id) {
+        if (!user || !user.id || !user.credential || user.deleted_at !== null || user.status == false) {
           throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
         }
 
@@ -64,7 +64,7 @@ class AuthController {
       if (body.type === "verify-otp") {
         const { email, otp, type } = body;
         const user = await this.authService.findByEmail(email);
-        if (!user || !user.id) {
+        if (!user || !user.id || !user.credential || user.deleted_at !== null || user.status == false) {
           throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
         }
         const jwt = decodeJwtToken(user.credential.access_token, config.JWT_SECRET);
@@ -152,7 +152,7 @@ class AuthController {
 
       const user = await this.authService.findByEmail(userAuth?.email!);
 
-      if (!user || !user.id) {
+      if (!user || !user.id || !user.credential) {
         throw new CustomError(StatusCodes.NOT_FOUND, "User Not Found");
       }
 

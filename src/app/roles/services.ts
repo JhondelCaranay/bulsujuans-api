@@ -4,6 +4,17 @@ import { TStoreRoleSchema, TUpdateRoleSchema } from "./schema";
 class RoleService {
   constructor() {}
 
+  public async getRoleOptions() {
+    return await prisma.role.findMany({
+      where: {
+        deleted_at: null,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+  }
+
   public async getRoles(search: string, limit: number, offset: number) {
     return await prisma.role.findMany({
       where: {

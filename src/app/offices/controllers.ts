@@ -19,11 +19,7 @@ class OfficeController {
         value: office.id,
       }));
 
-      return res.status(StatusCodes.OK).json({
-        data: formattedData,
-        success: true,
-        message: "Get Office Options",
-      });
+      return res.status(StatusCodes.OK).json(formattedData);
     } catch (error) {
       throw new CustomError(StatusCodes.INTERNAL_SERVER_ERROR, "Server Error. Failed to fetch office options");
     }
