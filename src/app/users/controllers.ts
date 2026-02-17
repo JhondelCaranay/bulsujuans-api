@@ -3,6 +3,7 @@ import UserService from "./services";
 import { StatusCodes } from "http-status-codes";
 import { CustomError } from "../../lib/utils";
 import { TStoreUserSchema, TUpdateUserSchema } from "./schema";
+import { deleteFromCloudinary, uploadToCloudinary } from "../../lib/config/cloudinary";
 
 class UserController {
   private userService: UserService = new UserService();
@@ -136,6 +137,48 @@ class UserController {
       });
     } catch (error) {
       throw new CustomError(StatusCodes.INTERNAL_SERVER_ERROR, "Server Error. Failed to delete user");
+    }
+  };
+
+  updatePhoto = async (req: Request, res: Response) => {
+    const file = (req.file as Express.Multer.File) || null;
+
+    try {
+      if (!file) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          data: null,
+          success: false,
+          message: "No file uploaded",
+        });
+      }
+
+      const user = await this.userService.getUserById(req.user?.userId!);
+
+      if (!user) {
+        throw new CustomError(StatusCodes.BAD_REQUEST, "User id doesn't exist");
+      }
+
+      if (user.photo_id) {
+        await deleteFromCloudinary(user.photo_id, "raw");
+      }
+
+      const uploadedFile = await uploadToCloudinary(file.buffer, "complaints", "image", [
+        { width: 300, height: 300, crop: "fill", gravity: "face" },
+        { quality: "auto", fetch_format: "auto" },
+        { radius: "max" },
+      ]);
+
+      await this.userService.updateUser(req.user?.userId!, {
+        photo_url: uploadedFile.url,
+        photo_id: uploadedFile.public_id,
+      });
+
+      return res.status(StatusCodes.CREATED).json({
+        success: true,
+        message: "Photo updated successfully",
+      });
+    } catch (error) {
+      throw new CustomError(StatusCodes.INTERNAL_SERVER_ERROR, "Server Error. Failed to update photo");
     }
   };
 }

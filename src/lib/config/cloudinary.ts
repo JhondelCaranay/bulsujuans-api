@@ -10,12 +10,14 @@ export const uploadToCloudinary = (
   fileBuffer: Buffer,
   folder = "uploads",
   resourceType: "image" | "auto" | "raw" = "auto",
+  transformations: any[] = [],
 ): Promise<{ url: string; public_id: string }> => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         resource_type: resourceType,
         folder,
+        transformation: transformations,
       },
       (error, result) => {
         if (error || !result) return reject(error);

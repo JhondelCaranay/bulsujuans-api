@@ -10,7 +10,6 @@ yarn-error.log*
 
 # TypeScript build output
 dist/
-
 # Environment files
 .env
 .env.local

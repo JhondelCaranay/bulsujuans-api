@@ -16,77 +16,59 @@
 # Project Flow Chart
 
 ```mermaid
-START
-│
-├── STUDENT LOGIN
-│     │
-│     ├── View News Page
-│     │
-│     ├── View Profile
-│     │       └── Manage Profile Information
-│     │
-│     ├── View Complaint Page
-│     │       └── Post Complaint
-│     │               │
-│     │               ├── Ticket Created
-│     │               │
-│     │               └── Assign Ticket Based on Complaint Category
-│     │               |       │
-│     │               |       ├── Bullying → Discipline Office
-│     │               |       ├── Health Concern → Health Services
-│     │               |       ├── Finance Concern → Finance Office
-│     │               |       └── Other → Respective Office
-│     │               |
-│     |               └── If Ticket Status = Resolved
-│     │                   │
-│     │                   ├── Receive Feedback Form
-│     │                   │
-│     │                   └── Submit Review
-│     │
-│     └── End
-│
-├── TEACHER LOGIN
-│     │
-│     ├── View News Page
-│     │
-│     ├── View Profile
-│     │       └── Manage Profile Information
-│     │
-│     ├── View Tickets Page
-│     │       │
-│     │       ├── Update Ticket Status
-│     │       │       │
-│     │       │       ├── Drag and Drop Ticket
-│     │       │       │
-│     │       │       └── If Status = Resolved
-│     │       │               │
-│     │       │               └── System Triggers Feedback Form to Student
-│     │       │
-│     │       └── End
-│     │
-│     └── End
-│
-├── NON-TEACHER LOGIN
-│     │
-│     ├── View News Page
-│     │       └── Post Content
-│     │
-│     ├── View Profile
-│     │       └── Manage Profile Information
-│     │
-│     └── End
-│
-└── ADMIN LOGIN
-      │
-      ├── View Users Page
-      │       └── Manage Users
-      │
-      ├── View Role Page
-      │       └── Manage Roles
-      │
-      └── End
+flowchart TD
+    START([START])
 
-END
+    %% STUDENT FLOW
+    START --> STUDENT_LOGIN[Student Login]
+    STUDENT_LOGIN --> S_NEWS[View News Page]
+    STUDENT_LOGIN --> S_PROFILE[View Profile]
+    S_PROFILE --> S_MANAGE_PROFILE[Manage Profile Information]
+    STUDENT_LOGIN --> S_COMPLAINT[View Complaint Page]
+    S_COMPLAINT --> S_POST_COMPLAINT[Post Complaint]
+    S_POST_COMPLAINT --> S_TICKET_CREATED[Ticket Created]
+    S_POST_COMPLAINT --> S_ASSIGN_TICKET[Assign Ticket Based on Complaint Category]
 
+    %% Ticket assignment
+    S_ASSIGN_TICKET --> BULLY{Bullying?}
+    BULLY -->|Yes| DISCIPLINE[Discipline Office]
+    BULLY -->|No| HEALTH{Health Concern?}
+    HEALTH -->|Yes| HEALTH_OFFICE[Health Services]
+    HEALTH -->|No| FINANCE{Finance Concern?}
+    FINANCE -->|Yes| FINANCE_OFFICE[Finance Office]
+    FINANCE -->|No| OTHER_OFFICE[Respective Office]
 
+    S_POST_COMPLAINT --> S_RESOLVED_CHECK{If Ticket Status = Resolved}
+    S_RESOLVED_CHECK --> FEEDBACK[Receive Feedback Form]
+    FEEDBACK --> SUBMIT_REVIEW[Submit Review]
+
+    STUDENT_LOGIN --> S_END[End]
+
+    %% TEACHER FLOW
+    START --> TEACHER_LOGIN[Teacher Login]
+    TEACHER_LOGIN --> T_NEWS[View News Page]
+    TEACHER_LOGIN --> T_PROFILE[View Profile]
+    T_PROFILE --> T_MANAGE_PROFILE[Manage Profile Information]
+    TEACHER_LOGIN --> T_TICKETS[View Tickets Page]
+    T_TICKETS --> T_UPDATE_STATUS[Update Ticket Status]
+    T_UPDATE_STATUS --> T_DRAG_DROP[Drag and Drop Ticket]
+    T_UPDATE_STATUS --> T_RESOLVED_CHECK{If Status = Resolved}
+    T_RESOLVED_CHECK --> SYSTEM_FEEDBACK[System Triggers Feedback Form to Student]
+    TEACHER_LOGIN --> T_END[End]
+
+    %% NON-TEACHER FLOW
+    START --> NON_TEACHER_LOGIN[Non-Teacher Login]
+    NON_TEACHER_LOGIN --> NT_NEWS[View News Page]
+    NT_NEWS --> NT_POST_CONTENT[Post Content]
+    NON_TEACHER_LOGIN --> NT_PROFILE[View Profile]
+    NT_PROFILE --> NT_MANAGE_PROFILE[Manage Profile Information]
+    NON_TEACHER_LOGIN --> NT_END[End]
+
+    %% ADMIN FLOW
+    START --> ADMIN_LOGIN[Admin Login]
+    ADMIN_LOGIN --> A_USERS[View Users Page]
+    A_USERS --> MANAGE_USERS[Manage Users]
+    ADMIN_LOGIN --> A_ROLES[View Role Page]
+    A_ROLES --> MANAGE_ROLES[Manage Roles]
+    ADMIN_LOGIN --> A_END[End]
 ```
