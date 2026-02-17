@@ -23,6 +23,9 @@ model User {
   role        Role?   @relation(fields: [role_id], references: [id])
   role_id     String?
 
+  photo_url String? @db.Text
+  photo_id  String? @db.Text
+
   credential    Credential? @relation(fields: [credential_id], references: [id])
   credential_id String?     @unique
 

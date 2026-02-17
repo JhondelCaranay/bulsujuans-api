@@ -9,6 +9,9 @@ export const storeUserSchema = z.object({
   status: z.boolean().optional(),
   role_id: z.cuid("Invalid role ID format").optional(),
   office_id: z.cuid("Invalid office ID format").optional(),
+
+  photo_url: z.string().optional(),
+  photo_id: z.string().optional(),
 });
 
 export type TStoreUserSchema = z.infer<typeof storeUserSchema>;
