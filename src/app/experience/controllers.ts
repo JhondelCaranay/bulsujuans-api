@@ -85,7 +85,7 @@ class ExperienceController {
       }
 
       return res.status(StatusCodes.CREATED).json({
-        data,
+        data: true,
         success: true,
         message: "Experience Created Successfully",
       });
