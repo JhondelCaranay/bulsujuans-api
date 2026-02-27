@@ -3,8 +3,6 @@ import EducationService from "./services";
 import { CustomError } from "../../lib/utils";
 import { StatusCodes } from "http-status-codes";
 import { TStoreEducationSchema, TUpdateEducationSchema } from "./schema";
-import { Education } from "@prisma/client";
-import { parseEnumParam } from "../../lib/prisma";
 
 class EducationController {
   private educationService: EducationService = new EducationService();
