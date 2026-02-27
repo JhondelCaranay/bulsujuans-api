@@ -27,7 +27,7 @@ class ExperienceService {
         deleted_at: null,
       },
       orderBy: {
-        createdAt: "asc",
+        start_year: "desc",
       },
       take: limit,
       skip: offset,

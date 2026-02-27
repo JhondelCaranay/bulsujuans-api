@@ -20,7 +20,7 @@ apiRouter.use("/access", authenticate, accessRoutes);
 apiRouter.use("/complaints", authenticate, complaintRoutes);
 apiRouter.use("/tickets", authenticate, ticketRoutes);
 apiRouter.use("/offices", authenticate, officeRoutes);
-apiRouter.use("/experience", authenticate, experienceRoutes);
+apiRouter.use("/experiences", authenticate, experienceRoutes);
 apiRouter.use("/education", authenticate, educationRoutes);
 apiRouter.use("/news", authenticate, newsRoutes);
 apiRouter.use("/auth", authRoutes);
